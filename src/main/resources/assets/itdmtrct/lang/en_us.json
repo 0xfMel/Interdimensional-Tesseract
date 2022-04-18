@@ -1,0 +1,13 @@
+{
+  "container.tesseract.title": "Interdimensional Tesseract",
+  "container.tesseract.new": "New",
+  "container.tesseract.available": "Available Channels",
+  "container.confirm": "Confirm",
+  "container.cancel": "Cancel",
+  "container.save": "Save",
+  "container.tesseract.editing": "Editing Channel",
+  "container.tesseract.editingnew": "New Channel",
+  "container.tesseract.name": "Channel Name",
+  "container.tesseract.private": "Private Channel?",
+  "container.tesseract.edit": "Edit"
+}
