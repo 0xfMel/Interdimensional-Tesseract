@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " I ",
+    "INI",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:ingots/iron"
+    },
+    "N": {
+      "tag": "forge:nuggets/iron"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:iron_gear"
+  }
+}

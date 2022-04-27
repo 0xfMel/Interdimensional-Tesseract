@@ -17,5 +17,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
         ModelFile interdimensionalTesseract = this.cubeAll(ModBlocks.INTERDIMENSIONAL_TESSERACT);
         this.simpleBlock(ModBlocks.INTERDIMENSIONAL_TESSERACT, interdimensionalTesseract);
         this.simpleBlockItem(ModBlocks.INTERDIMENSIONAL_TESSERACT, interdimensionalTesseract);
+
+        ModelFile tesseractFrame = this.cubeAll(ModBlocks.TESSERACT_FRAME);
+        this.simpleBlock(ModBlocks.TESSERACT_FRAME, tesseractFrame);
+        this.simpleBlockItem(ModBlocks.TESSERACT_FRAME, tesseractFrame);
     }
 }

@@ -4,16 +4,14 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.xml.bind.ValidationException;
-
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
 import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
 import ftm._0xfmel.itdmtrct.handers.ModPacketHander;
-import ftm._0xfmel.itdmtrct.utils.Logging;
+import ftm._0xfmel.itdmtrct.utils.ChannelUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -21,10 +19,9 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ChannelListMessage {
-    private static final int VALID_RANGE = (int) Math.floor(Math.pow(16 * 3, 2)); // 3x3 chunk area
-
     private static final int IS_OWN_FLAG;
     private static final int IS_PRIVATE_FLAG;
+    private static final int IS_SELECTED_FLAG;
     private static final int IN_RANGE_FLAG;
     private static final int IN_VALID_DIMENSION_FLAG;
 
@@ -32,6 +29,7 @@ public class ChannelListMessage {
         int flagIndex = 0;
         IS_OWN_FLAG = 1 << flagIndex++;
         IS_PRIVATE_FLAG = 1 << flagIndex++;
+        IS_SELECTED_FLAG = 1 << flagIndex++;
         IN_RANGE_FLAG = 1 << flagIndex++;
         IN_VALID_DIMENSION_FLAG = 1 << flagIndex++;
     }
@@ -39,22 +37,20 @@ public class ChannelListMessage {
     private final Stream<TesseractChannel> channels;
     private final UUID playerFor;
 
-    private final BlockPos tilePos;
-    private final String dimension;
+    private final TileEntity te;
 
-    public static void write(ServerPlayerEntity player, BlockPos tilePos, PacketBuffer buf) {
+    public static void write(ServerPlayerEntity player, TileEntity te, PacketBuffer buf) {
         player.getServer().getLevel(World.OVERWORLD)
                 .getCapability(TesseractChannelsCapability.TESSERACT_CHANNELS_CAPABILITY)
                 .ifPresent((tesseractChannels) -> {
                     new ChannelListMessage(
                             tesseractChannels.getChannels(),
                             player.getUUID(),
-                            tilePos,
-                            player.level.dimension().toString()).encode(buf);
+                            te).encode(buf);
                 });
     }
 
-    public static void send(ServerPlayerEntity player, BlockPos tilePos) {
+    public static void send(ServerPlayerEntity player, TileEntity te) {
         player.getServer().getLevel(World.OVERWORLD)
                 .getCapability(TesseractChannelsCapability.TESSERACT_CHANNELS_CAPABILITY)
                 .ifPresent((tesseractChannels) -> {
@@ -62,21 +58,19 @@ public class ChannelListMessage {
                             new ChannelListMessage(
                                     tesseractChannels.getChannels(),
                                     player.getUUID(),
-                                    tilePos,
-                                    player.level.dimension().toString()));
+                                    te));
                 });
     }
 
-    private ChannelListMessage(Stream<TesseractChannel> channels, UUID playerFor, BlockPos tilePos, String dimension) {
+    private ChannelListMessage(Stream<TesseractChannel> channels, UUID playerFor, TileEntity te) {
         this.channels = channels;
         this.playerFor = playerFor;
-        this.tilePos = tilePos;
-        this.dimension = dimension;
+        this.te = te;
     }
 
     @OnlyIn(Dist.CLIENT)
     private ChannelListMessage(Stream<TesseractChannel> channels, UUID playerFor) {
-        this(channels, playerFor, null, null);
+        this(channels, playerFor, null);
     }
 
     @SuppressWarnings("resource")
@@ -94,9 +88,10 @@ public class ChannelListMessage {
                 playerUuid = me;
                 isPrivate = (flag & IS_PRIVATE_FLAG) == IS_PRIVATE_FLAG;
             }
+            boolean isSelected = (flag & IS_SELECTED_FLAG) == IS_SELECTED_FLAG;
             boolean inRange = (flag & IN_RANGE_FLAG) == IN_RANGE_FLAG;
             boolean inValidDimension = (flag & IN_VALID_DIMENSION_FLAG) == IN_VALID_DIMENSION_FLAG;
-            channels[i] = new TesseractChannel(id, name, playerUuid, isPrivate, inRange, inValidDimension);
+            channels[i] = new TesseractChannel(id, name, playerUuid, isPrivate, isSelected, inRange, inValidDimension);
         }
         return new ChannelListMessage(Stream.of(channels), me);
     }
@@ -112,8 +107,9 @@ public class ChannelListMessage {
             buf.writeByte(
                     (channel.playerUuid.equals(this.playerFor) ? IS_OWN_FLAG : 0)
                             | (channel.isPrivate ? IS_PRIVATE_FLAG : 0)
-                            | (channel.pos.distSqr(this.tilePos) <= VALID_RANGE ? IN_RANGE_FLAG : 0)
-                            | (!channel.dimension.equals(this.dimension) ? IN_VALID_DIMENSION_FLAG : 0));
+                            | (channel.isSelected ? IS_SELECTED_FLAG : 0)
+                            | (ChannelUtil.isChannelDistanceValid(channel, this.te) ? IN_RANGE_FLAG : 0)
+                            | (ChannelUtil.isChannelDimensionValid(channel, this.te) ? IN_VALID_DIMENSION_FLAG : 0));
         });
     }
 
@@ -130,13 +126,7 @@ public class ChannelListMessage {
 
                     tesseractChannels.clearChannels();
 
-                    this.channels.forEachOrdered(channel -> {
-                        try {
-                            tesseractChannels.addChannel(channel);
-                        } catch (ValidationException e) {
-                            Logging.LOGGER.warn("Invalid data from server for TesseractChannels capability, skipping.");
-                        }
-                    });
+                    this.channels.forEachOrdered(channel -> tesseractChannels.addChannelUnchecked(channel));
                 });
     }
 }

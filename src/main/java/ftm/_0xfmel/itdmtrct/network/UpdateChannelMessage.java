@@ -10,7 +10,7 @@ import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels;
 import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
 import ftm._0xfmel.itdmtrct.containers.TesseractContainer;
-import ftm._0xfmel.itdmtrct.tile.InterdimenstionalTesseractTile;
+import ftm._0xfmel.itdmtrct.tile.InterdimensionalTesseractTile;
 import ftm._0xfmel.itdmtrct.utils.Logging;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -47,19 +47,16 @@ public class UpdateChannelMessage {
             ServerPlayerEntity player = ctx.get().getSender();
 
             boolean flag = false;
-            InterdimenstionalTesseractTile te = null;
+            InterdimensionalTesseractTile te = null;
             TesseractContainer container = null;
+            int teChannelId = -1;
 
             if (player.containerMenu instanceof TesseractContainer && player.containerMenu.stillValid(player)) {
                 container = (TesseractContainer) player.containerMenu;
                 te = container.getTileEntity();
-                if (te.getChannelId() == this.id || !te.getOwnChannel()) {
-                    if (this.id < 0 && !te.getOwnChannel()) {
-                        flag = true;
-                    } else if (te.getOwnChannel()) {
-                        flag = true;
-                    }
-                }
+                teChannelId = te.getChannelId();
+                boolean ownChannel = te.getOwnChannel();
+                flag = (teChannelId == this.id && ownChannel) || (!ownChannel && this.id < 0);
             }
 
             if (!flag)
@@ -73,8 +70,14 @@ public class UpdateChannelMessage {
 
                 try {
                     if (this.id < 0) {
+                        if (teChannelId >= 0) {
+                            tesseractChannels.get().modifyChannel(teChannelId, (changeChannel) -> {
+                                changeChannel.isSelected = false;
+                            });
+                        }
+
                         TesseractChannel newChannel = new TesseractChannel(this.name, playerUuid, this.isPrivate,
-                                te.getBlockPos(), te.getLevel().dimension().toString());
+                                te.getBlockPos(), te.getLevel().dimension().location().toString());
                         tesseractChannels.get().addChannel(newChannel);
                         te.setChannelId(newChannel.id);
                         te.setOwnChannel(true);

@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DGD",
+    "ETE",
+    "IRI"
+  ],
+  "key": {
+    "D": {
+      "tag": "forge:gems/diamond"
+    },
+    "G": {
+      "tag": "forge:ingots/gold"
+    },
+    "E": {
+      "tag": "forge:ender_pearls"
+    },
+    "T": {
+      "item": "itdmtrct:tesseract_frame"
+    },
+    "I": {
+      "tag": "forge:gears/iron"
+    },
+    "R": {
+      "tag": "forge:dusts/redstone"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:interdimensional_tesseract"
+  }
+}

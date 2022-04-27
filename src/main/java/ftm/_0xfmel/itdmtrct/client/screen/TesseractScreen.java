@@ -1,16 +1,17 @@
 package ftm._0xfmel.itdmtrct.client.screen;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.ValidationException;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels;
-import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
+import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
 import ftm._0xfmel.itdmtrct.containers.TesseractContainer;
+import ftm._0xfmel.itdmtrct.gameobjects.item.ModItems;
 import ftm._0xfmel.itdmtrct.globals.ModGlobals;
 import ftm._0xfmel.itdmtrct.handers.ModPacketHander;
 import ftm._0xfmel.itdmtrct.network.SelectChannelMessage;
@@ -18,9 +19,11 @@ import ftm._0xfmel.itdmtrct.utils.Logging;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
@@ -34,6 +37,27 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class TesseractScreen extends ContainerScreen<TesseractContainer> {
     protected static final ResourceLocation TEXTURE = new ResourceLocation(ModGlobals.MOD_ID,
             "textures/gui/tesseract.png");
+
+    protected static final ITextComponent DISTANCE_TOOLTIP_TEXT = new TranslationTextComponent(
+            "container.tesseract.distance");
+    protected static final ITextComponent DIMENSION_TOOLTIP_TEXT = new TranslationTextComponent(
+            "container.tesseract.dimension");
+    protected static final ITextComponent SELECTED_TOOLTIP_TEXT = new TranslationTextComponent(
+            "container.tesseract.selected");
+    protected static final ITextComponent MORE_TOOLTIP_TEXT = new TranslationTextComponent("container.tesseract.more");
+
+    protected static final ITextComponent EDITING_TEXT = new TranslationTextComponent("container.tesseract.editing");
+    protected static final ITextComponent EDITINGNEW_TEXT = new TranslationTextComponent(
+            "container.tesseract.editingnew");
+
+    protected static final ITextComponent NAME_TEXT = new TranslationTextComponent("container.tesseract.name");
+    protected static final ITextComponent PRIVATE_TEXT = new TranslationTextComponent("container.tesseract.private");
+
+    protected static final ITextComponent AVAILABLE_TEXT = new TranslationTextComponent(
+            "container.tesseract.available");
+
+    protected static final ITextComponent DISTANCE_CHAT_TEXT = new TranslationTextComponent(
+            "container.tesseract.distancelong");
 
     public static int prevSelectedChannel = -1;
 
@@ -71,6 +95,8 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
     protected TextFieldWidget name;
     protected PrivateToggleButton isPrivate;
 
+    protected Widget keepLoadedUpgrade;
+
     protected int selectedChannel = -1;
 
     protected boolean adding = false;
@@ -97,26 +123,26 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        ITextComponent addBtnText = new TranslationTextComponent("container.tesseract.new");
+        ITextComponent addBtnText = new TranslationTextComponent("container.new");
         int addBtnWidth = this.font.width(addBtnText) + 12;
         this.newBtn = new Button(this.leftPos + 169 - addBtnWidth, this.topPos + 16, addBtnWidth, 20, addBtnText,
-                this::handleButtonClick);
+                this::handleEditBtnClick);
 
-        ITextComponent editBtnText = new TranslationTextComponent("container.tesseract.edit");
+        ITextComponent editBtnText = new TranslationTextComponent("container.edit");
         int editBtnWidth = this.font.width(editBtnText) + 12;
         this.editBtn = new Button(this.leftPos + 169 - editBtnWidth, this.topPos + 16, editBtnWidth, 20, editBtnText,
-                this::handleButtonClick);
+                this::handleEditBtnClick);
         this.editBtn.visible = false;
 
         this.confirmBtn = new Button(this.leftPos + 7, this.topPos + 139, (this.imageWidth - 20) / 2, 20,
-                new TranslationTextComponent("container.confirm"), this::handleButtonClick);
+                new TranslationTextComponent("container.confirm"), this::handleSubmitBtnClick);
 
         this.cancelBtn = new Button(this.leftPos + (this.imageWidth - 20) / 2 + 13, this.topPos + 139,
                 (this.imageWidth - 20) / 2, 20,
-                new TranslationTextComponent("container.cancel"), this::handleButtonClick);
+                new TranslationTextComponent("container.cancel"), this::handleCancelBtnClick);
 
         this.saveBtn = new Button(this.leftPos + 7, this.topPos + 139, (this.imageWidth - 20) / 2, 20,
-                new TranslationTextComponent("container.save"), this::handleButtonClick);
+                new TranslationTextComponent("container.save"), this::handleSubmitBtnClick);
         this.saveBtn.visible = false;
 
         this.addButton(this.newBtn);
@@ -125,15 +151,21 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         this.addButton(this.cancelBtn);
         this.addButton(this.saveBtn);
 
-        this.name = new TextFieldWidget(this.font, this.leftPos + 10, this.topPos + 55, 158, 12,
-                new TranslationTextComponent("container.tesseract.name"));
+        this.name = new TextFieldWidget(this.font, this.leftPos + 10, this.topPos + 55, 158, 12, NAME_TEXT);
         this.name.setTextColor(-1);
         this.name.setBordered(false);
         this.name.setMaxLength(20);
+        this.name.setVisible(false);
         this.children.add(this.name);
 
         this.isPrivate = new PrivateToggleButton(this.leftPos + 7, this.topPos + 71);
+        this.isPrivate.visible = false;
         this.children.add(this.isPrivate);
+
+        this.keepLoadedUpgrade = new KeepLoadedUpgradeButton(this.leftPos + this.imageWidth,
+                this.topPos + this.imageHeight - 4 - 28);
+        this.keepLoadedUpgrade.visible = false;
+        this.children.add(this.keepLoadedUpgrade);
     }
 
     private void setDefaultValues() {
@@ -170,6 +202,8 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if (pKeyCode == 256) {
             this.minecraft.player.closeContainer();
+        } else if (pKeyCode == 257 || pKeyCode == 335) {
+            this.handleSubmit();
         }
 
         return !this.name.keyPressed(pKeyCode, pScanCode, pModifiers) && !this.name.canConsumeInput()
@@ -177,38 +211,42 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                 : true;
     }
 
-    private void handleButtonClick(Button button) {
-        if (button == this.newBtn || button == this.editBtn) {
-            this.setDefaultValues();
-            this.isEditing = true;
-        } else if (button == this.confirmBtn) {
+    private void handleEditBtnClick(Button btn) {
+        this.setDefaultValues();
+        this.isEditing = true;
+    }
+
+    private void handleSubmitBtnClick(Button btn) {
+        this.handleSubmit();
+    }
+
+    private void handleCancelBtnClick(Button btn) {
+        if (this.isEditing) {
+            this.isEditing = false;
+        } else {
+            this.minecraft.player.closeContainer();
+        }
+    }
+
+    private void handleSubmit() {
+        if (this.isEditing) {
+            if (this.menu.getOwnChannel()) {
+                this.channels.modifyChannelUnchecked(this.menu.getChannelId(), (channel) -> {
+                    channel.name = this.name.getValue();
+                    channel.isPrivate = this.isPrivate.getValue();
+                });
+            } else {
+                this.scrollPos = 0;
+                this.adding = true;
+                this.channels.addChannelUnchecked(
+                        new TesseractChannel(-1, this.name.getValue(), this.isPrivate.getValue(), false));
+            }
+            this.isEditing = false;
+        } else {
             if (TesseractScreen.prevSelectedChannel != this.selectedChannel) {
                 ModPacketHander.INSTANCE.sendToServer(new SelectChannelMessage(this.selectedChannel));
             }
             this.minecraft.player.closeContainer();
-        } else if (button == this.cancelBtn) {
-            if (this.isEditing) {
-                this.isEditing = false;
-            } else {
-                this.minecraft.player.closeContainer();
-            }
-        } else if (button == this.saveBtn) {
-            try {
-                if (!this.menu.getOwnChannel()) {
-                    this.scrollPos = 0;
-                    this.adding = true;
-                    this.channels.addChannel(
-                            new TesseractChannel(-1, this.name.getValue(), this.isPrivate.getValue()));
-                } else {
-                    this.channels.modifyChannel(this.menu.getChannelId(), (channel) -> {
-                        channel.name = this.name.getValue();
-                        channel.isPrivate = this.isPrivate.getValue();
-                    });
-                }
-                this.isEditing = false;
-            } catch (ValidationException e) {
-                Logging.LOGGER.warn(e.getMessage());
-            }
         }
     }
 
@@ -252,6 +290,8 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         this.isPrivate.visible = this.isEditing;
 
+        this.keepLoadedUpgrade.visible = this.menu.getHasKeepLoadedUpgrade();
+
         if (len > this.maxChannels) {
             int extraChannels = len - this.maxChannels;
             int newScrollShowOffset = Math.round(MathHelper.lerp(this.scrollPos, 0, extraChannels));
@@ -269,6 +309,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         super.render(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
 
         this.renderFg(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
+        this.renderChannelTooltips(pMatrixStack, pMouseX, pMouseY);
     }
 
     @Override
@@ -327,11 +368,12 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         }
     }
 
-    protected void renderFg(MatrixStack pPoseStack, int pMouseX, int pMouseY, float pPartialTicks) {
+    protected void renderFg(MatrixStack pMatrixStack, int pMouseX, int pMouseY, float pPartialTicks) {
         if (this.isEditing) {
-            this.name.render(pPoseStack, pMouseX, pMouseY, pPartialTicks);
-            this.isPrivate.render(pPoseStack, pMouseX, pMouseY, pPartialTicks);
+            this.name.render(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
+            this.isPrivate.render(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
         }
+        this.keepLoadedUpgrade.render(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
     }
 
     @Override
@@ -341,16 +383,14 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         if (this.isEditing) {
             this.font.draw(pMatrixStack,
-                    new TranslationTextComponent(
-                            this.hasOwnChannel ? "container.tesseract.editing" : "container.tesseract.editingnew"),
+                    this.hasOwnChannel ? TesseractScreen.EDITING_TEXT : TesseractScreen.EDITINGNEW_TEXT,
                     8, 28, 4210752);
 
-            this.font.draw(pMatrixStack,
-                    new TranslationTextComponent("container.tesseract.name"), 8, 41, 4210752);
+            this.font.draw(pMatrixStack, NAME_TEXT, 8, 41, 4210752);
 
-            this.font.draw(pMatrixStack, new TranslationTextComponent("container.tesseract.private"), 34, 78, 4210752);
+            this.font.draw(pMatrixStack, PRIVATE_TEXT, 34, 78, 4210752);
         } else {
-            this.font.draw(pMatrixStack, new TranslationTextComponent("container.tesseract.available"), 8, 28, 4210752);
+            this.font.draw(pMatrixStack, AVAILABLE_TEXT, 8, 28, 4210752);
 
             for (int i = 0; i < Math.min(this.channels.getChannelsSize(), this.maxChannels); i++) {
                 TesseractChannel channel = this.orderedChannels.get(i + this.scrollShowOffset);
@@ -362,6 +402,44 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                         this.selectedChannel == channel.id ? -1 : this.canSelectChannel(channel) ? 15592941 : 7500402);
             }
         }
+    }
+
+    protected void renderChannelTooltips(MatrixStack pMatrixStack, int pMouseX, int pMouseY) {
+        TesseractChannel overChannel = this.getMouseOverChannel(pMouseX, pMouseY);
+        if (overChannel == null
+                || overChannel.id == this.selectedChannel
+                || overChannel.id == TesseractScreen.prevSelectedChannel) {
+            return;
+        }
+
+        if (overChannel.isSelected) {
+            this.renderTooltip(pMatrixStack, TesseractScreen.SELECTED_TOOLTIP_TEXT, pMouseX, pMouseY);
+        } else if (!overChannel.inValidDimension) {
+            this.renderTooltip(pMatrixStack, TesseractScreen.DIMENSION_TOOLTIP_TEXT, pMouseX, pMouseY);
+        } else if (!overChannel.inRange) {
+            this.renderComponentTooltip(pMatrixStack,
+                    Arrays.asList(TesseractScreen.DISTANCE_TOOLTIP_TEXT, TesseractScreen.MORE_TOOLTIP_TEXT),
+                    pMouseX, pMouseY);
+        }
+    }
+
+    private TesseractChannel getMouseOverChannel(double pMouseX, double pMouseY) {
+        if (pMouseY > this.topPos + this.channelPosY
+                && pMouseY < this.topPos + this.channelPosY + this.scrollAreaHeight
+                && pMouseX > this.leftPos + this.channelPosX
+                && pMouseX < this.leftPos + this.channelPosX + 143) {
+
+            int y = (int) Math.floor(pMouseY)
+                    - this.topPos
+                    - this.channelPosY
+                    - this.scrollPosOffset;
+            int selectPos = Math.floorDiv(y, 16) + this.scrollShowOffset;
+            if (y % 16 != 15 && selectPos < this.channels.getChannelsSize()) { // todo fix this logic
+                return this.orderedChannels.get(selectPos);
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -380,21 +458,17 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                 return true;
             }
 
-            if (pMouseY > this.topPos + this.channelPosY
-                    && pMouseY < this.topPos + this.channelPosY + this.scrollAreaHeight
-                    && pMouseX > this.leftPos + this.channelPosX
-                    && pMouseX < this.leftPos + this.channelPosX + 143) {
+            TesseractChannel selectingChannel = getMouseOverChannel(pMouseX, pMouseY);
+            if (selectingChannel != null) {
+                if (this.canSelectChannel(selectingChannel)) {
+                    this.selectedChannel = selectingChannel.id;
+                } else if (!selectingChannel.isSelected && selectingChannel.inValidDimension
+                        && !selectingChannel.inRange) {
 
-                int y = (int) Math.floor(pMouseY)
-                        - this.topPos
-                        - this.channelPosY
-                        // - this.scrollShowOffset
-                        - this.scrollPosOffset;
-                int selectPos = Math.floorDiv(y, 16) + this.scrollShowOffset;
-                if (y % 16 != 15 && selectPos < this.channels.getChannelsSize()) {
-                    this.selectedChannel = this.orderedChannels.get(selectPos).id;
-                    return true;
+                    this.minecraft.gui.getChat()
+                            .addMessage(TesseractScreen.DISTANCE_CHAT_TEXT);
                 }
+                return true;
             }
         }
 
@@ -451,7 +525,9 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
     }
 
     private boolean canSelectChannel(TesseractChannel channel) {
-        return (channel.inRange && channel.inValidDimension) || channel.id == this.selectedChannel;
+        return (channel.inRange && channel.inValidDimension && !channel.isSelected)
+                || channel.id == this.selectedChannel
+                || channel.id == TesseractScreen.prevSelectedChannel;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -463,17 +539,19 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
             super(pX, pY, 22, 22, StringTextComponent.EMPTY);
         }
 
+        @SuppressWarnings("deprecation")
+        @Override
         public void renderButton(MatrixStack pMatrixStack, int pMouseX, int pMouseY, float pPartialTicks) {
-            Minecraft.getInstance().getTextureManager().bind(TesseractScreen.TEXTURE);
-            int i = 181;
+            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            TesseractScreen.this.minecraft.getTextureManager().bind(TesseractScreen.TEXTURE);
             int j = 0;
             if (this.mouseDown) {
-                j += this.width * 1;
+                j += this.width;
             } else if (this.isHovered()) {
                 j += this.width * 2;
             }
 
-            this.blit(pMatrixStack, this.x, this.y, j, i, this.width, this.height);
+            this.blit(pMatrixStack, this.x, this.y, j, 181, this.width, this.height);
             this.renderIcon(pMatrixStack);
         }
 
@@ -512,6 +590,32 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         public void setValue(boolean value) {
             this.value = value;
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    protected class KeepLoadedUpgradeButton extends AbstractButton {
+        protected KeepLoadedUpgradeButton(int pX, int pY) {
+            super(pX, pY, 30, 28, StringTextComponent.EMPTY);
+        }
+
+        @SuppressWarnings("deprecation")
+        @Override
+        public void renderButton(MatrixStack pMatrixStack, int pMouseX, int pMouseY, float pPartialTicks) {
+            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            TesseractScreen.this.minecraft.getTextureManager().bind(TesseractScreen.TEXTURE);
+            int j = 0;
+            if (this.isHovered()) {
+                j += this.width;
+            }
+
+            this.blit(pMatrixStack, this.x, this.y, j, 219, this.width, this.height);
+        }
+
+        @Override
+        public void onPress() {
+            ModPacketHander.sendEventToServer(ModPacketHander.REMOVE_UPGRADE_EVENT_ID);
+            TesseractScreen.this.inventory.add(new ItemStack(ModItems.KEEP_LOADED_UPGRADE));
         }
     }
 }

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "itdmtrct:item/keep_loaded_upgrade"
+  }
+}

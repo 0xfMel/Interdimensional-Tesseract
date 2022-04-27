@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IEI",
+    "EGE",
+    "YEY"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:gears/iron"
+    },
+    "E": {
+      "tag": "forge:gems/emerald"
+    },
+    "G": {
+      "item": "minecraft:grass_block"
+    },
+    "Y": {
+      "item": "minecraft:ender_eye"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:keep_loaded_upgrade"
+  }
+}

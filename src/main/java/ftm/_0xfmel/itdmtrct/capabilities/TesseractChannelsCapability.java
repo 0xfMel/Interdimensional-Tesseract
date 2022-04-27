@@ -2,11 +2,8 @@ package ftm._0xfmel.itdmtrct.capabilities;
 
 import java.security.InvalidParameterException;
 
-import javax.xml.bind.ValidationException;
-
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
 import ftm._0xfmel.itdmtrct.utils.CollectorsUtil;
-import ftm._0xfmel.itdmtrct.utils.Logging;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -43,15 +40,8 @@ public class TesseractChannelsCapability {
                     if (!compound.isEmpty()) {
                         ListNBT channels = (ListNBT) compound.get("channels");
 
-                        channels.forEach(
-                                channelNbt -> {
-                                    try {
-                                        instance.addChannel(TesseractChannel.from((CompoundNBT) channelNbt));
-                                    } catch (ValidationException e) {
-                                        Logging.LOGGER
-                                                .warn("Invalid NBT data in TesseractChannels capability, skipping.");
-                                    }
-                                });
+                        channels.forEach(channelNbt -> instance
+                                .addChannelUnchecked(TesseractChannel.from((CompoundNBT) channelNbt)));
 
                         instance.setNextId(compound.getInt("nextId"));
                     }

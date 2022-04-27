@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EDE",
+    "IEI",
+    "EDE"
+  ],
+  "key": {
+    "E": {
+      "tag": "forge:ender_pearls"
+    },
+    "D": {
+      "tag": "forge:gems/diamond"
+    },
+    "I": {
+      "tag": "forge:gears/iron"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:tesseract_frame"
+  }
+}

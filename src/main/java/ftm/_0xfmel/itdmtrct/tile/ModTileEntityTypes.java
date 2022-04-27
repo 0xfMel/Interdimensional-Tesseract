@@ -11,16 +11,21 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 
 public class ModTileEntityTypes {
-    public static final List<TileEntityType<?>> TILE_ENTITY_TYPES = new ArrayList<>();
+        public static final List<TileEntityType<?>> TILE_ENTITY_TYPES = new ArrayList<>();
 
-    public static final TileEntityType<InterdimenstionalTesseractTile> INTERDIMENSIONAL_TESSERACT = build(
-            "interdimensional_tesseract", InterdimenstionalTesseractTile::new, ModBlocks.INTERDIMENSIONAL_TESSERACT);
+        public static final TileEntityType<InterdimensionalTesseractTile> INTERDIMENSIONAL_TESSERACT = build(
+                        "interdimensional_tesseract", InterdimensionalTesseractTile::new,
+                        ModBlocks.INTERDIMENSIONAL_TESSERACT);
 
-    private static <T extends TileEntity> TileEntityType<T> build(String name, Supplier<T> factory,
-            Block... validBlocks) {
-        TileEntityType<T> tet = TileEntityType.Builder.of(factory, validBlocks).build(null);
-        tet.setRegistryName(ModGlobals.MOD_ID, name);
-        TILE_ENTITY_TYPES.add(tet);
-        return tet;
-    }
+        public static final TileEntityType<TesseractItemInterfaceTile> TESSERACT_ITEM_INTERFACE = build(
+                        "tesseract_item_interface", TesseractItemInterfaceTile::new,
+                        ModBlocks.TESSERACT_ITEM_INTERFACE);
+
+        private static <T extends TileEntity> TileEntityType<T> build(String name, Supplier<T> factory,
+                        Block... validBlocks) {
+                TileEntityType<T> tet = TileEntityType.Builder.of(factory, validBlocks).build(null);
+                tet.setRegistryName(ModGlobals.MOD_ID, name);
+                TILE_ENTITY_TYPES.add(tet);
+                return tet;
+        }
 }

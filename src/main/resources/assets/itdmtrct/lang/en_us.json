@@ -1,13 +1,19 @@
 {
-  "container.tesseract.title": "Interdimensional Tesseract",
-  "container.tesseract.new": "New",
-  "container.tesseract.available": "Available Channels",
   "container.confirm": "Confirm",
   "container.cancel": "Cancel",
   "container.save": "Save",
+  "container.edit": "Edit",
+  "container.new": "New",
+
+  "container.tesseract.title": "Interdimensional Tesseract",
+  "container.tesseract.available": "Available Channels",
   "container.tesseract.editing": "Editing Channel",
   "container.tesseract.editingnew": "New Channel",
   "container.tesseract.name": "Channel Name",
   "container.tesseract.private": "Private Channel?",
-  "container.tesseract.edit": "Edit"
+  "container.tesseract.more": "(Click for More)",
+  "container.tesseract.distance": "Out of Range",
+  "container.tesseract.dimension": "Inside Same Dimension",
+  "container.tesseract.selected": "Already Paired",
+  "container.tesseract.distancelong": "Similarly to the way Nether portals connect, for an Interdimensional Tesseract to connect to a channel, it must be placed within 24 blocks of the equivalent coordinates of the channel host Tesseract in the smallest of the two dimensions.\nE.g. The Nether is 1/8th the size of the Overworld, so if the host Tesseract is placed at (80, 80) in the Overworld, the second Tesseract must be placed within 24 blocks of (10, 10) in The Nether."
 }
