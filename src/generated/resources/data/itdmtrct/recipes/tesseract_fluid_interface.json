@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IBI",
+    "E#E",
+    "IBI"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:gears/iron"
+    },
+    "B": {
+      "item": "minecraft:bucket"
+    },
+    "E": {
+      "tag": "forge:ender_pearls"
+    },
+    "#": {
+      "tag": "forge:storage_blocks/iron"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:tesseract_fluid_interface"
+  }
+}

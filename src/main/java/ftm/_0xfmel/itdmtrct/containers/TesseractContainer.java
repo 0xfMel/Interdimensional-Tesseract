@@ -149,4 +149,14 @@ public class TesseractContainer extends Container {
     public boolean getHasKeepLoadedUpgrade() {
         return this.te.getHasKeepLoadedUpgrade();
     }
+
+    @OnlyIn(Dist.CLIENT)
+    public int getEnergy() {
+        return this.data.get(1);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean getUseOwnEnergy() {
+        return this.te.useOwnEnergy();
+    }
 }

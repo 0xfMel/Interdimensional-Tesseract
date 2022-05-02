@@ -1,0 +1,51 @@
+{
+  "variants": {
+    "connected=false,direction=down": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=down": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "x": 90,
+      "uvlock": true
+    },
+    "connected=false,direction=up": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=up": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "x": -90,
+      "uvlock": true
+    },
+    "connected=false,direction=north": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=north": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "uvlock": true
+    },
+    "connected=false,direction=south": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=south": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "y": 180,
+      "uvlock": true
+    },
+    "connected=false,direction=west": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=west": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "y": 270,
+      "uvlock": true
+    },
+    "connected=false,direction=east": {
+      "model": "itdmtrct:block/tesseract_item_interface"
+    },
+    "connected=true,direction=east": {
+      "model": "itdmtrct:block/tesseract_item_interface_connected",
+      "y": 90,
+      "uvlock": true
+    }
+  }
+}

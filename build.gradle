@@ -135,9 +135,12 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:thermal_exp-69163:3607549")
     runtimeOnly fg.deobf("curse.maven:thermal_fdn-222880:3758724")
     runtimeOnly fg.deobf("curse.maven:cofh-69162:3758720")
-    runtimeOnly fg.deobf("curse.maven:refinedpiped-370696:3630290")
     runtimeOnly fg.deobf("curse.maven:jei-238222:3681294")
     runtimeOnly fg.deobf("curse.maven:top-245211:3752096")
+    runtimeOnly fg.deobf("curse.maven:prettypipes-376737:3724799")
+    runtimeOnly fg.deobf("curse.maven:prettypipesfluids-479142:3368538")
+    runtimeOnly fg.deobf("curse.maven:powah-352656:3232535")
+    runtimeOnly fg.deobf("curse.maven:lollipop-347954:3232534")
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"

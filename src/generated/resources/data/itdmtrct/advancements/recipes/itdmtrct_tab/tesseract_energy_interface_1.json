@@ -2,16 +2,16 @@
   "parent": "minecraft:recipes/root",
   "rewards": {
     "recipes": [
-      "itdmtrct:keep_loaded_upgrade_1"
+      "itdmtrct:tesseract_energy_interface_1"
     ]
   },
   "criteria": {
-    "has_ender_eye": {
+    "has_ender_pearl": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "item": "minecraft:ender_eye"
+            "tag": "forge:ender_pearls"
           }
         ]
       }
@@ -19,13 +19,13 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "itdmtrct:keep_loaded_upgrade_1"
+        "recipe": "itdmtrct:tesseract_energy_interface_1"
       }
     }
   },
   "requirements": [
     [
-      "has_ender_eye",
+      "has_ender_pearl",
       "has_the_recipe"
     ]
   ]

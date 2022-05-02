@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IRI",
+    "E#E",
+    "IGI"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:gears/iron"
+    },
+    "G": {
+      "tag": "forge:storage_blocks/gold"
+    },
+    "E": {
+      "tag": "forge:ender_pearls"
+    },
+    "#": {
+      "tag": "forge:storage_blocks/iron"
+    },
+    "R": {
+      "tag": "forge:storage_blocks/redstone"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:tesseract_energy_interface"
+  }
+}

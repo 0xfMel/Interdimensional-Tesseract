@@ -27,14 +27,16 @@ displayName="Interdimensional Tesseract" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="examplemod.png" #optional
+logoFile="logo.png" #optional
 # A text field displayed in the mod UI
 #credits="Thanks for this example mod goes to Java" #optional
 # A text field displayed in the mod UI
 authors="0xfMel" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Adds a tesseract that can only be used across dimensions, not in the same dimension, for balance reasons
+A tesseract that can only be used across dimensions in a certain range, but not in the same dimension.
+
+The Interdimensional Tesseract is able to transport items, fluids, and energy across dimensions, but not the same dimension.  This is intended as a balanced way to allow transporting things between dimensions, without adding the ability to wirelessly transport things around your base for just the cost of some FE.  However you're still able to transport items to the nether, and back again in a different location, making use of the 1:8 coordinate ratio to transport items in the overworld over longer distances.
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 #[[dependencies.examplemod]] #optional

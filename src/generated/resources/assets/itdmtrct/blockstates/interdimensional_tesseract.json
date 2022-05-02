@@ -1,7 +1,62 @@
 {
-  "variants": {
-    "": {
-      "model": "itdmtrct:block/interdimensional_tesseract"
+  "multipart": [
+    {
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_base"
+      }
+    },
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection",
+        "x": -90
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection"
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "itdmtrct:block/interdimensional_tesseract_connection",
+        "y": 90
+      }
     }
-  }
+  ]
 }

@@ -6,6 +6,9 @@
     "IEI"
   ],
   "key": {
+    "Y": {
+      "item": "minecraft:ender_eye"
+    },
     "I": {
       "tag": "forge:gears/iron"
     },
@@ -14,9 +17,6 @@
     },
     "G": {
       "item": "minecraft:grass_block"
-    },
-    "Y": {
-      "item": "minecraft:ender_eye"
     }
   },
   "result": {

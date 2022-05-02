@@ -31,7 +31,7 @@
       "projectName": "Interdimensional-Tesseract",
       "cwd": "${workspaceFolder}\\run",
       "vmArgs": "-Dforge.logging.console.level\u003ddebug -Dforge.logging.markers\u003dREGISTRIES -XX:+IgnoreUnrecognizedVMOptions --add-exports\u003djava.base/sun.security.util\u003dALL-UNNAMED --add-exports\u003djdk.naming.dns/com.sun.jndi.dns\u003djava.naming --add-opens\u003djava.base/java.util.jar\u003dALL-UNNAMED",
-      "args": "--mod itdmtrct --all --output C:\\Users\\Mel\\Documents\\GitHub\\Interdimensional-Tesseract\\src\\generated\\resources --existing C:\\Users\\Mel\\Documents\\GitHub\\Interdimensional-Tesseract\\src\\main\\resources",
+      "args": "--mod itdmtrct --all --output D:\\Windows\\Documents\\GitHub\\Interdimensional-Tesseract\\src\\generated\\resources --existing D:\\Windows\\Documents\\GitHub\\Interdimensional-Tesseract\\src\\main\\resources",
       "env": {
         "MOD_CLASSES": "itdmtrct%%${workspaceFolder}\\bin\\main;itdmtrct%%${workspaceFolder}\\bin\\main",
         "MCP_MAPPINGS": "parchment_2022.03.06-1.16.5",

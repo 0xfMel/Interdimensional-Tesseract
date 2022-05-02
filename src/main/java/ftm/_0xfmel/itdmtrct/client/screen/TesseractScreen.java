@@ -15,8 +15,10 @@ import ftm._0xfmel.itdmtrct.gameobjects.item.ModItems;
 import ftm._0xfmel.itdmtrct.globals.ModGlobals;
 import ftm._0xfmel.itdmtrct.handers.ModPacketHander;
 import ftm._0xfmel.itdmtrct.network.SelectChannelMessage;
+import ftm._0xfmel.itdmtrct.utils.FormatUtil;
 import ftm._0xfmel.itdmtrct.utils.Logging;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.Widget;
@@ -25,6 +27,7 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -59,6 +62,8 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
     protected static final ITextComponent DISTANCE_CHAT_TEXT = new TranslationTextComponent(
             "container.tesseract.distancelong");
 
+    protected static final String ENERGY_UNITS = "FE";
+
     public static int prevSelectedChannel = -1;
 
     protected ITesseractChannels channels;
@@ -81,6 +86,11 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
     protected int channelPosX = 9;
     protected int channelPosY = 40;
+
+    protected int powerPosX = -22 + 4;
+    protected int powerPosY = 4;
+    protected int powerWidth = 10;
+    protected int powerHeight = 52;
 
     protected Button newBtn;
     protected Button confirmBtn;
@@ -144,6 +154,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         this.saveBtn = new Button(this.leftPos + 7, this.topPos + 139, (this.imageWidth - 20) / 2, 20,
                 new TranslationTextComponent("container.save"), this::handleSubmitBtnClick);
         this.saveBtn.visible = false;
+        this.saveBtn.active = false;
 
         this.addButton(this.newBtn);
         this.addButton(this.editBtn);
@@ -281,6 +292,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         this.confirmBtn.visible = !this.isEditing;
         this.saveBtn.visible = this.isEditing;
+        this.saveBtn.active = this.name.getValue().length() > 0;
         this.newBtn.visible = !this.isEditing && !this.hasOwnChannel && canEdit;
         this.editBtn.visible = !this.isEditing && this.hasOwnChannel && canEdit;
 
@@ -310,6 +322,10 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         this.renderFg(pMatrixStack, pMouseX, pMouseY, pPartialTicks);
         this.renderChannelTooltips(pMatrixStack, pMouseX, pMouseY);
+
+        if (this.menu.getChannelId() >= 0) {
+            this.renderPowerTooltip(pMatrixStack, pMouseX, pMouseY);
+        }
     }
 
     @Override
@@ -320,7 +336,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
 
         if (this.isEditing) {
             // name input
-            this.blit(pMatrixStack, this.leftPos + 7, this.topPos + 51, 0, 203, 162, 16);
+            this.blit(pMatrixStack, this.leftPos + 7, this.topPos + 51, 0, 231, 162, 16);
         } else {
             // left half brown bg
             this.blit(pMatrixStack, this.leftPos + 7, this.topPos + 38, 176, 15, 66, 97);
@@ -364,6 +380,21 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                             0, 166,
                             143, 15);
                 }
+            }
+
+            // power
+            if (this.menu.getChannelId() >= 0) {
+                this.blit(pMatrixStack, this.leftPos - 22, this.topPos, 143, 166, 18, 60);
+
+                int height = (int) Math.round(MathHelper.lerp(MathHelper.inverseLerp(this.menu.getEnergy(), 0,
+                        this.menu.getUseOwnEnergy() ? TesseractChannel.ENERGY_CAPACITY
+                                : TesseractChannel.ENERGY_CAPACITY_INTERFACE),
+                        0, this.powerHeight));
+
+                this.blit(pMatrixStack,
+                        this.leftPos + this.powerPosX, this.topPos + this.powerPosY + this.powerHeight - height,
+                        161, 166 + this.powerHeight - height,
+                        this.powerWidth, height);
             }
         }
     }
@@ -423,10 +454,33 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         }
     }
 
+    protected void renderPowerTooltip(MatrixStack pMatrixStack, int pMouseX, int pMouseY) {
+        if (!isMouseOverPower(pMouseX, pMouseY))
+            return;
+
+        this.renderTooltip(pMatrixStack,
+                new StringTextComponent(
+                        FormatUtil.formatNumber(this.menu.getEnergy(), TesseractScreen.ENERGY_UNITS, false) + "/"
+                                + FormatUtil.formatNumber(
+                                        this.menu.getUseOwnEnergy()
+                                                ? TesseractChannel.ENERGY_CAPACITY
+                                                : TesseractChannel.ENERGY_CAPACITY_INTERFACE,
+                                        TesseractScreen.ENERGY_UNITS)),
+                pMouseX,
+                pMouseY);
+    }
+
+    private boolean isMouseOverPower(double pMouseX, double pMouseY) {
+        return pMouseY >= this.topPos + this.powerPosY
+                && pMouseY < this.topPos + this.powerPosY + this.powerHeight
+                && pMouseX >= this.leftPos + this.powerPosX
+                && pMouseX < this.leftPos + this.powerPosX + this.powerWidth;
+    }
+
     private TesseractChannel getMouseOverChannel(double pMouseX, double pMouseY) {
-        if (pMouseY > this.topPos + this.channelPosY
+        if (pMouseY >= this.topPos + this.channelPosY
                 && pMouseY < this.topPos + this.channelPosY + this.scrollAreaHeight
-                && pMouseX > this.leftPos + this.channelPosX
+                && pMouseX >= this.leftPos + this.channelPosX
                 && pMouseX < this.leftPos + this.channelPosX + 143) {
 
             int y = (int) Math.floor(pMouseY)
@@ -434,7 +488,9 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                     - this.channelPosY
                     - this.scrollPosOffset;
             int selectPos = Math.floorDiv(y, 16) + this.scrollShowOffset;
-            if (y % 16 != 15 && selectPos < this.channels.getChannelsSize()) { // todo fix this logic
+            if (y % 16 != 15 && selectPos < this.channels.getChannelsSize() && selectPos >= this.scrollShowOffset
+                    && selectPos < this.scrollShowOffset + this.maxChannels) {
+
                 return this.orderedChannels.get(selectPos);
             }
         }
@@ -462,6 +518,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
             if (selectingChannel != null) {
                 if (this.canSelectChannel(selectingChannel)) {
                     this.selectedChannel = selectingChannel.id;
+                    this.playClickSound();
                 } else if (!selectingChannel.isSelected && selectingChannel.inValidDimension
                         && !selectingChannel.inRange) {
 
@@ -528,6 +585,10 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
         return (channel.inRange && channel.inValidDimension && !channel.isSelected)
                 || channel.id == this.selectedChannel
                 || channel.id == TesseractScreen.prevSelectedChannel;
+    }
+
+    private void playClickSound() {
+        this.minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -609,7 +670,7 @@ public class TesseractScreen extends ContainerScreen<TesseractContainer> {
                 j += this.width;
             }
 
-            this.blit(pMatrixStack, this.x, this.y, j, 219, this.width, this.height);
+            this.blit(pMatrixStack, this.x, this.y, j, 203, this.width, this.height);
         }
 
         @Override

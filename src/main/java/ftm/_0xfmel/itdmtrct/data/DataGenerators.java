@@ -2,6 +2,7 @@ package ftm._0xfmel.itdmtrct.data;
 
 import ftm._0xfmel.itdmtrct.data.client.ModBlockStateProvider;
 import ftm._0xfmel.itdmtrct.data.client.ModItemModelProvider;
+import ftm._0xfmel.itdmtrct.data.loot.ModLootTableProvider;
 import ftm._0xfmel.itdmtrct.data.tags.ModBlockTagsProvider;
 import ftm._0xfmel.itdmtrct.data.tags.ModItemTagsProvider;
 import net.minecraft.data.BlockTagsProvider;
@@ -26,5 +27,6 @@ public class DataGenerators {
         gen.addProvider(new ModRecipeProvider(gen));
         gen.addProvider(blockTagsProvider);
         gen.addProvider(new ModItemTagsProvider(gen, blockTagsProvider, exFileHelper));
+        gen.addProvider(new ModLootTableProvider(gen));
     }
 }

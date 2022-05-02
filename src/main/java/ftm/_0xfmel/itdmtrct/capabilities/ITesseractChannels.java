@@ -5,14 +5,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.xml.bind.ValidationException;
 
+import ftm._0xfmel.itdmtrct.gameobjects.block.AbstractTesseractInterfaceBlock;
+import ftm._0xfmel.itdmtrct.gameobjects.block.ModBlocks;
 import ftm._0xfmel.itdmtrct.handers.ModPacketHander;
 import ftm._0xfmel.itdmtrct.network.UpdateChannelMessage;
+import ftm._0xfmel.itdmtrct.tile.InterdimensionalTesseractTile;
+import ftm._0xfmel.itdmtrct.utils.TesseractInterfaceCounter;
 import ftm._0xfmel.itdmtrct.utils.ValidationUtil;
+import ftm._0xfmel.itdmtrct.utils.fluids.FluidStackHelper;
+import ftm._0xfmel.itdmtrct.utils.interfaces.IInterfaceCounterListener;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -26,6 +33,8 @@ import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fluids.FluidAttributes;
+import net.minecraftforge.fluids.FluidStack;
 
 public interface ITesseractChannels {
     Stream<TesseractChannel> getChannels();
@@ -52,8 +61,16 @@ public interface ITesseractChannels {
 
     void setIsClientSide(boolean isClientSide);
 
-    public static class TesseractChannel implements INBTSerializable<CompoundNBT> {
+    public static class TesseractChannel implements INBTSerializable<CompoundNBT>, IInterfaceCounterListener {
         public static final int SLOTS_COUNT = 6;
+        public static final int TANKS_COUNT = 8;
+        public static final int TANKS_CAPACITY = FluidAttributes.BUCKET_VOLUME;
+        public static final int ENERGY_CAPACITY_INTERFACE = 500000;
+        public static final int ENERGY_MAX_TRANSFER = 8000;
+        public static final int ENERGY_CAPACITY = 200000;
+        public static final int ENERGY_PER_TICK = 1500;
+        public static final int UNPOWERED_COOLDOWN_TICKS = 15;
+        public static final int POWERED_COOLDOWN_TICKS = 5;
 
         public int id;
         public String name;
@@ -62,12 +79,21 @@ public interface ITesseractChannels {
         public BlockPos pos;
         public String dimension;
         public boolean isSelected;
+        public boolean unpowered = true;
 
         private NonNullList<ItemStack> itemStacks = null;
+        private NonNullList<FluidStack> tanks = null;
 
-        private List<Runnable> deleteListeners = new ArrayList<>();
+        private AtomicInteger energy = new AtomicInteger(0);
 
-        public int itemInterfaceCount = 0;
+        private List<InterdimensionalTesseractTile> listeningTiles = new ArrayList<>();
+
+        private TesseractInterfaceCounter interfaceCounter = new TesseractInterfaceCounter(this);
+
+        private long latestTick;
+        private long cooldownEndTick;
+
+        private int tickTileTracker;
 
         @OnlyIn(Dist.CLIENT)
         public boolean inRange;
@@ -127,20 +153,93 @@ public interface ITesseractChannels {
             return this.itemStacks;
         }
 
-        public void addItemInterfaceCount(int num) {
-            this.itemInterfaceCount += num;
+        public NonNullList<FluidStack> getTanksForInterface() {
+            if (this.tanks == null) {
+                this.tanks = NonNullList.withSize(TesseractChannel.TANKS_COUNT, FluidStack.EMPTY);
+            }
+            return this.tanks;
         }
 
-        public void addItemInterfaceCount() {
-            this.addItemInterfaceCount(1);
+        public AtomicInteger getEnergyForInterface() {
+            return this.energy;
         }
 
-        public void removeItemInterfaceCount(int num) {
-            this.itemInterfaceCount -= num;
+        public void setLatestTick(long tick) {
+            this.latestTick = tick;
         }
 
-        public void removeItemInterfaceCount() {
-            this.removeItemInterfaceCount(1);
+        public void tick(long tick) {
+            if (tick <= this.latestTick) {
+                if (this.energy.get() >= TesseractChannel.ENERGY_PER_TICK) {
+                    this.energy.addAndGet(-TesseractChannel.ENERGY_PER_TICK);
+                    if (this.unpowered && tick >= this.cooldownEndTick) {
+                        this.unpowered = false;
+                        this.cooldownEndTick = tick + TesseractChannel.POWERED_COOLDOWN_TICKS;
+                    }
+                } else {
+                    if (!this.unpowered && tick >= this.cooldownEndTick) {
+                        this.unpowered = true;
+                        this.cooldownEndTick = tick + TesseractChannel.UNPOWERED_COOLDOWN_TICKS;
+                    }
+                }
+            }
+
+            if (this.tickTileTracker >= this.listeningTiles.size()) {
+                this.tickTileTracker = 0;
+            }
+
+            boolean updateTracker = false;
+            for (int i = this.tickTileTracker; i < this.listeningTiles.size(); i++) {
+                if (this.listeningTiles.get(i).tickInterfaces() && i == 0) {
+                    updateTracker = true;
+                }
+            }
+
+            for (int i = 0; i < this.tickTileTracker; i++) {
+                this.listeningTiles.get(i).tickInterfaces();
+            }
+
+            if (updateTracker) {
+                this.tickTileTracker++;
+                this.tickTileTracker %= this.listeningTiles.size();
+            }
+        }
+
+        public int getInterfaceCount(AbstractTesseractInterfaceBlock interfaceBlock) {
+            return this.interfaceCounter.getCount(interfaceBlock);
+        }
+
+        public void addInterfaceCount(AbstractTesseractInterfaceBlock interfaceBlock, int num) {
+            this.interfaceCounter.addCount(interfaceBlock, num);
+        }
+
+        public void addInterfaceCount(AbstractTesseractInterfaceBlock interfaceBlock) {
+            this.addInterfaceCount(interfaceBlock, 1);
+        }
+
+        public void removeInterfaceCount(AbstractTesseractInterfaceBlock interfaceBlock, int num) {
+            this.interfaceCounter.removeCount(interfaceBlock, num);
+            this.clampEnergy();
+        }
+
+        public void removeInterfaceCount(AbstractTesseractInterfaceBlock interfaceBlock) {
+            this.removeInterfaceCount(interfaceBlock, 1);
+            this.clampEnergy();
+        }
+
+        public void removeInterfaceCount(TesseractInterfaceCounter interfaceCounter) {
+            this.interfaceCounter.removeAll(interfaceCounter);
+            this.clampEnergy();
+        }
+
+        public void addInterfaceCount(TesseractInterfaceCounter interfaceCounter) {
+            this.interfaceCounter.addAll(interfaceCounter);
+        }
+
+        private void clampEnergy() {
+            if (this.interfaceCounter.getCount(ModBlocks.TESSERACT_ENERGY_INTERFACE) <= 0) {
+                this.energy.set(Math.min(this.energy.get(), TesseractChannel.ENERGY_CAPACITY));
+            }
         }
 
         @Override
@@ -151,13 +250,27 @@ public interface ITesseractChannels {
             nbt.putUUID("player", this.playerUuid);
             nbt.putBoolean("private", this.isPrivate);
             nbt.putBoolean("selected", this.isSelected);
-            nbt.putLong("pos", this.pos.asLong());
-            nbt.putString("dim", this.dimension);
-            nbt.putInt("itemInterfaceCount", this.itemInterfaceCount);
+            nbt.putBoolean("unpowered", this.unpowered);
+
+            if (this.pos != null) {
+                nbt.putLong("pos", this.pos.asLong());
+            }
+
+            if (this.dimension != null) {
+                nbt.putString("dim", this.dimension);
+            }
+
+            nbt.put("interfaceCounter", this.interfaceCounter.serializeNBT());
 
             if (this.itemStacks != null) {
                 ItemStackHelper.saveAllItems(nbt, this.itemStacks);
             }
+
+            if (this.tanks != null) {
+                FluidStackHelper.saveAllTanks(nbt, this.tanks);
+            }
+
+            nbt.putInt("energy", this.energy.get());
 
             return nbt;
         }
@@ -169,9 +282,19 @@ public interface ITesseractChannels {
             this.playerUuid = nbt.getUUID("player");
             this.isPrivate = nbt.getBoolean("private");
             this.isSelected = nbt.getBoolean("selected");
-            this.pos = BlockPos.of(nbt.getLong("pos"));
-            this.dimension = nbt.getString("dim");
-            this.itemInterfaceCount = nbt.getInt("itemInterfaceCount");
+            this.unpowered = nbt.getBoolean("unpowered");
+
+            if (nbt.contains("pos")) {
+                this.pos = BlockPos.of(nbt.getLong("pos"));
+            }
+
+            if (nbt.contains("dim")) {
+                this.dimension = nbt.getString("dim");
+            }
+
+            if (nbt.contains("interfaceCounter")) {
+                this.interfaceCounter.deserializeNBT(nbt.getCompound("interfaceCounter"));
+            }
 
             if (nbt.contains("Items", 9)) {
                 if (this.itemStacks == null) {
@@ -179,21 +302,43 @@ public interface ITesseractChannels {
                 }
                 ItemStackHelper.loadAllItems(nbt, this.itemStacks);
             }
+
+            if (nbt.contains("Tanks", 9)) {
+                if (this.tanks == null) {
+                    this.tanks = NonNullList.withSize(TANKS_COUNT, FluidStack.EMPTY);
+                }
+                FluidStackHelper.loadAllTanks(nbt, this.tanks);
+            }
+
+            this.energy.set(nbt.getInt("energy"));
         }
 
-        public void addDeleteListener(Runnable listener) {
-            if (!this.deleteListeners.contains(listener)) {
-                this.deleteListeners.add(listener);
+        public void addTileListener(InterdimensionalTesseractTile tile) {
+            if (!this.listeningTiles.contains(tile)) {
+                this.listeningTiles.add(tile);
             }
         }
 
-        public void removeDeleteListener(Runnable listener) {
-            this.deleteListeners.remove(listener);
+        public void removeTileListener(InterdimensionalTesseractTile tile) {
+            this.listeningTiles.remove(tile);
         }
 
         public void deleted() {
-            this.deleteListeners.forEach(Runnable::run);
-            this.deleteListeners.clear();
+            this.iterateListeners(InterdimensionalTesseractTile::handleChannelDeleted);
+            this.listeningTiles.clear();
+        }
+
+        public void onContentsChanged() {
+            this.iterateListeners(InterdimensionalTesseractTile::handleContentsChanged);
+        }
+
+        @Override
+        public void onInterfaceCounterChange() {
+            this.iterateListeners(InterdimensionalTesseractTile::setChangedAndUpdateConnections);
+        }
+
+        private void iterateListeners(Consumer<InterdimensionalTesseractTile> action) {
+            new ArrayList<>(this.listeningTiles).forEach(action);
         }
     }
 
@@ -293,14 +438,12 @@ public interface ITesseractChannels {
             change.accept(newChannel);
 
             if (this.isClientSide) {
-                // this.channels.put(id, newChannel);
                 channel.deserializeNBT(newChannel.serializeNBT());
                 ModPacketHander.INSTANCE.sendToServer(new UpdateChannelMessage(newChannel));
             } else {
                 if (doCheck) {
-                    ValidationUtil.assertLength(newChannel.name, 20, "Channel name from client");
+                    ValidationUtil.assertLength(newChannel.name, 1, 20, "Channel name from client");
                 }
-                // this.channels.put(id, newChannel);
                 channel.deserializeNBT(newChannel.serializeNBT());
             }
         }
@@ -321,7 +464,7 @@ public interface ITesseractChannels {
 
         @Override
         public void addChannel(TesseractChannel newChannel) throws ValidationException {
-            ValidationUtil.assertLength(newChannel.name, 20, "Channel name from client");
+            ValidationUtil.assertLength(newChannel.name, 1, 20, "Channel name from client");
             this.addChannelUnchecked(newChannel);
         }
 

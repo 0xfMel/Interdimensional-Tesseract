@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "DGD",
-    "ETE",
+    "YTY",
     "IRI"
   ],
   "key": {
@@ -12,8 +12,8 @@
     "G": {
       "tag": "forge:ingots/gold"
     },
-    "E": {
-      "tag": "forge:ender_pearls"
+    "Y": {
+      "item": "minecraft:ender_eye"
     },
     "T": {
       "item": "itdmtrct:tesseract_frame"

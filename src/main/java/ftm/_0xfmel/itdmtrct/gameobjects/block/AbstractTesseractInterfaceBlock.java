@@ -1,20 +1,18 @@
 package ftm._0xfmel.itdmtrct.gameobjects.block;
 
-import java.util.Optional;
 import java.util.function.Function;
 
-import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels;
-import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
-import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
+import ftm._0xfmel.itdmtrct.gameobjects.item.ItemGroupCategory;
 import ftm._0xfmel.itdmtrct.gameobjects.item.ModItemGroups;
-import ftm._0xfmel.itdmtrct.tile.TesseractItemInterfaceTile;
+import ftm._0xfmel.itdmtrct.tile.AbstractTesseractInterfaceTile;
+import ftm._0xfmel.itdmtrct.utils.StateUtil;
 import ftm._0xfmel.itdmtrct.utils.Utils;
+import ftm._0xfmel.itdmtrct.utils.interfaces.ITesseractInterfaceTile;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.EnumProperty;
@@ -27,16 +25,16 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
-public class TesseractInterfaceBlock extends BaseBlock {
+public abstract class AbstractTesseractInterfaceBlock extends BaseBlock implements IWrenchable {
     public static final EnumProperty<Direction> DIRECTION = EnumProperty.create("direction", Direction.class);
     public static final BooleanProperty CONNECTED = BooleanProperty.create("connected");
 
     private final Function<Direction, TileEntity> tileFactory;
 
-    public TesseractInterfaceBlock(String name, Function<Direction, TileEntity> tileFactory) {
+    public AbstractTesseractInterfaceBlock(String name, Function<Direction, TileEntity> tileFactory) {
         super(name, AbstractBlock.Properties.of(Material.HEAVY_METAL)
                 .strength(8f, 9f)
-                .sound(SoundType.METAL), ModItemGroups.TAB);
+                .sound(SoundType.METAL), ModItemGroups.TAB, ItemGroupCategory.INTERFACE);
 
         this.tileFactory = tileFactory;
 
@@ -54,50 +52,13 @@ public class TesseractInterfaceBlock extends BaseBlock {
     public void onPlace(BlockState pState, World pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
         if (pOldState.is(pState.getBlock())) {
             TileEntity te = pLevel.getBlockEntity(pPos);
-            if (te instanceof TesseractItemInterfaceTile) {
-                ((TesseractItemInterfaceTile) te).setDirection(pState.getValue(DIRECTION));
+            if (te instanceof ITesseractInterfaceTile) {
+                ((ITesseractInterfaceTile) te).setDirection(pState.getValue(DIRECTION));
             }
 
             // update any surrounding tesseracts to detect connecting to different tesseract
             pLevel.updateNeighborsAt(pPos, pState.getBlock());
         }
-    }
-
-    // todo - redstone comparator output
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void onRemove(BlockState pState, World pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
-        if (!pLevel.isClientSide && !pState.is(pNewState.getBlock())) {
-            TileEntity tileentity = pLevel.getBlockEntity(pPos);
-            if (tileentity instanceof TesseractItemInterfaceTile) {
-                ((TesseractItemInterfaceTile) tileentity).getTesseractTile().ifPresent((tesseractTile) -> {
-                    if (tesseractTile.getItemInterfaceCount() <= 1) {
-                        boolean drop = tesseractTile.getChannelId() < 0;
-
-                        if (!drop) {
-                            Optional<ITesseractChannels> channels = pLevel.getServer().getLevel(World.OVERWORLD)
-                                    .getCapability(TesseractChannelsCapability.TESSERACT_CHANNELS_CAPABILITY).resolve();
-
-                            if (channels.isPresent()) {
-                                TesseractChannel channel = channels.get().getChannel(tesseractTile.getChannelId());
-                                if (channel == null || channel.itemInterfaceCount <= 1) {
-                                    drop = true;
-                                }
-                            } else {
-                                drop = true;
-                            }
-                        }
-
-                        if (drop) {
-                            InventoryHelper.dropContents(pLevel, pPos, tesseractTile.getStacksForInterface());
-                        }
-                    }
-                });
-            }
-        }
-
-        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
     }
 
     @Override
@@ -148,24 +109,13 @@ public class TesseractInterfaceBlock extends BaseBlock {
                     && world.getBlockState(neighbor).is(ModBlocks.INTERDIMENSIONAL_TESSERACT)) {
 
                 TileEntity te = world.getBlockEntity(pos);
-                if (te instanceof TesseractItemInterfaceTile) {
+                if (te instanceof AbstractTesseractInterfaceTile) {
                     te.clearCache();
 
-                    if (!world.isClientSide() && world instanceof IWorld) {
-
-                        BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
-
-                        for (Direction direction : AbstractBlock.UPDATE_SHAPE_ORDER) {
-                            if (direction == dirVal)
-                                continue;
-                            blockpos$mutable.setWithOffset(pos, direction);
-                            BlockState blockstate = world.getBlockState(blockpos$mutable);
-                            BlockState blockstate1 = blockstate.updateShape(direction.getOpposite(), state,
-                                    (IWorld) world,
-                                    blockpos$mutable, pos);
-                            Block.updateOrDestroy(blockstate, blockstate1, (IWorld) world, blockpos$mutable, 2,
-                                    512);
-                        }
+                    if (!world.isClientSide() && world instanceof World) {
+                        World theWorld = (World) world;
+                        theWorld.updateNeighborsAtExceptFromFacing(pos, state.getBlock(), dirVal);
+                        StateUtil.updateNeighbourShapesExceptFromFacing(state, theWorld, pos, 0, dirVal);
                     }
                 }
             }
@@ -173,6 +123,14 @@ public class TesseractInterfaceBlock extends BaseBlock {
 
         super.onNeighborChange(state, world, pos, neighbor);
     }
+
+    @Override
+    public boolean hasAnalogOutputSignal(BlockState pState) {
+        return true;
+    }
+
+    @Override
+    public abstract int getAnalogOutputSignal(BlockState pBlockState, World pLevel, BlockPos pPos);
 
     @Override
     public boolean hasTileEntity(BlockState state) {

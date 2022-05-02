@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IDI",
+    "E#E",
+    "ICI"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:gears/iron"
+    },
+    "C": {
+      "tag": "forge:chests"
+    },
+    "E": {
+      "tag": "forge:ender_pearls"
+    },
+    "#": {
+      "tag": "forge:storage_blocks/iron"
+    },
+    "D": {
+      "tag": "forge:chests/ender"
+    }
+  },
+  "result": {
+    "item": "itdmtrct:tesseract_item_interface"
+  }
+}
