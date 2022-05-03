@@ -18,10 +18,12 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.particle.DiggingParticle;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.tileentity.TileEntity;
@@ -39,7 +41,6 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
 
@@ -302,6 +303,13 @@ public class InterdimensionalTesseractBlock extends BaseBlock implements IWrench
                 if (tile.getChannelId() >= 0 && tile.getOwnChannel()) {
                     InventoryHelper.dropContents(pLevel, pPos, tile.getStacksForInterface());
                 }
+
+                if (tile.getHasKeepLoadedUpgrade()) {
+                    ItemEntity itementity = new ItemEntity(pLevel, pPos.getX() + 0.5d, pPos.getY() + 0.5d,
+                            pPos.getZ() + 0.5d, new ItemStack(ModItems.KEEP_LOADED_UPGRADE));
+
+                    pLevel.addFreshEntity(itementity);
+                }
             }
         }
 
@@ -333,17 +341,6 @@ public class InterdimensionalTesseractBlock extends BaseBlock implements IWrench
         }
 
         super.neighborChanged(pState, pLevel, pPos, pBlock, pFromPos, pIsMoving);
-    }
-
-    @Override
-    public void onNeighborChange(BlockState state, IWorldReader world, BlockPos pos, BlockPos neighbor) {
-        TileEntity te = world.getBlockEntity(pos);
-
-        if (te instanceof InterdimensionalTesseractTile) {
-            ((InterdimensionalTesseractTile) te).updatePoweredDirections();
-        }
-
-        super.onNeighborChange(state, world, pos, neighbor);
     }
 
     @Override

@@ -226,6 +226,7 @@ public class InterdimensionalTesseractTile extends TileEntity implements INamedC
     public void tick() {
         if (!this.level.isClientSide) {
             this.getChannel().ifPresent((channel) -> channel.setLatestTick(this.level.getGameTime()));
+            this.updatePoweredDirections();
         }
     }
 
@@ -321,7 +322,6 @@ public class InterdimensionalTesseractTile extends TileEntity implements INamedC
             this.forceChunk(true);
         }
 
-        this.updatePoweredDirections();
         this.handleContentsChanged();
     }
 
@@ -391,9 +391,10 @@ public class InterdimensionalTesseractTile extends TileEntity implements INamedC
                 mutablePos.setWithOffset(this.worldPosition, dir);
                 TileEntity te = this.level.getBlockEntity(mutablePos);
 
-                if (te != null && !(te instanceof TesseractEnergyInterfaceTile)
-                        && te.getCapability(CapabilityEnergy.ENERGY, dir.getOpposite()).map((cap) -> cap.canExtract())
-                                .orElse(false)) {
+                if (te != null
+                        && !(te instanceof TesseractEnergyInterfaceTile)
+                        && !(te instanceof InterdimensionalTesseractTile)
+                        && te.getCapability(CapabilityEnergy.ENERGY, dir.getOpposite()).isPresent()) {
 
                     newPoweredDirections.add(dir);
                 }
