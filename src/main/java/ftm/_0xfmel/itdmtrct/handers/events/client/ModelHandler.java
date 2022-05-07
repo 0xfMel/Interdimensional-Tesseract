@@ -28,7 +28,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 @SuppressWarnings("resource")
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(bus = Bus.MOD)
+@Mod.EventBusSubscriber(bus = Bus.MOD, value = { Dist.CLIENT })
 public class ModelHandler {
     private static final ResourceLocation POWER_MODEL_LOCATION = new ResourceLocation(ModGlobals.MOD_ID,
             "block/" + ModBlocks.INTERDIMENSIONAL_TESSERACT.getRegistryName().getPath() + "_power");

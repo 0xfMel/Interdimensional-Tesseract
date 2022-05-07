@@ -11,7 +11,6 @@ import ftm._0xfmel.itdmtrct.tile.InterdimensionalTesseractTile;
 import ftm._0xfmel.itdmtrct.utils.ConcurrencyUtil;
 import ftm._0xfmel.itdmtrct.utils.FactoryMap;
 import ftm._0xfmel.itdmtrct.utils.Logging;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -30,16 +29,13 @@ import net.minecraftforge.fml.network.NetworkEvent.Context;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 public class TesseractContainer extends Container {
-    @OnlyIn(Dist.CLIENT)
     public static TesseractContainer factory(int windowId, PlayerInventory inv, PacketBuffer data) {
-        Minecraft mc = Minecraft.getInstance();
-
         ChannelListMessage.decode(data).handleWork();
         TesseractScreen.prevSelectedChannel = data.readVarInt();
-        TileEntity te = mc.level.getBlockEntity(data.readBlockPos());
+        TileEntity te = inv.player.level.getBlockEntity(data.readBlockPos());
 
         return new TesseractContainer(windowId, new IntArray(InterdimensionalTesseractTile.DATA_SLOTS_COUNT), te,
-                mc.player);
+                inv.player);
     }
 
     public static void openFor(ServerPlayerEntity serverPlayer, InterdimensionalTesseractTile te) {

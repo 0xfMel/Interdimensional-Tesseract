@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(bus = Bus.MOD)
+@Mod.EventBusSubscriber(bus = Bus.MOD, value = { Dist.CLIENT })
 public class TextureHandler {
     private static final ResourceLocation POWER_TEXTURE_LOCATION = new ResourceLocation(ModGlobals.MOD_ID,
             "block/" + ModBlocks.INTERDIMENSIONAL_TESSERACT.getRegistryName().getPath() + "_power");

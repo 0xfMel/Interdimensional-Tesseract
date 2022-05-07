@@ -42,6 +42,8 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
 
 public class InterdimensionalTesseractBlock extends BaseBlock implements IWrenchable {
@@ -375,6 +377,7 @@ public class InterdimensionalTesseractBlock extends BaseBlock implements IWrench
         return state;
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
     public boolean addDestroyEffects(BlockState state, World world, BlockPos pos, ParticleManager manager) {
         if (world instanceof ClientWorld) {
