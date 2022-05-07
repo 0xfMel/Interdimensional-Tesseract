@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import javax.xml.bind.ValidationException;
-
 import ftm._0xfmel.itdmtrct.gameobjects.block.AbstractTesseractInterfaceBlock;
 import ftm._0xfmel.itdmtrct.gameobjects.block.ModBlocks;
 import ftm._0xfmel.itdmtrct.handers.ModPacketHander;
@@ -18,6 +16,7 @@ import ftm._0xfmel.itdmtrct.network.UpdateChannelMessage;
 import ftm._0xfmel.itdmtrct.tile.InterdimensionalTesseractTile;
 import ftm._0xfmel.itdmtrct.utils.TesseractInterfaceCounter;
 import ftm._0xfmel.itdmtrct.utils.ValidationUtil;
+import ftm._0xfmel.itdmtrct.utils.exception.ValidationException;
 import ftm._0xfmel.itdmtrct.utils.fluids.FluidStackHelper;
 import ftm._0xfmel.itdmtrct.utils.interfaces.IInterfaceCounterListener;
 import net.minecraft.inventory.ItemStackHelper;

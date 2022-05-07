@@ -1,6 +1,6 @@
 package ftm._0xfmel.itdmtrct.utils;
 
-import javax.xml.bind.ValidationException;
+import ftm._0xfmel.itdmtrct.utils.exception.ValidationException;
 
 public class ValidationUtil {
     public static void assertLength(String value, int minLen, int maxLen, String desc) throws ValidationException {

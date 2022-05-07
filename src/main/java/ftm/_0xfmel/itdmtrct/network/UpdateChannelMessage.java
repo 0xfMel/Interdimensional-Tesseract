@@ -4,14 +4,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import javax.xml.bind.ValidationException;
-
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels;
 import ftm._0xfmel.itdmtrct.capabilities.TesseractChannelsCapability;
 import ftm._0xfmel.itdmtrct.capabilities.ITesseractChannels.TesseractChannel;
 import ftm._0xfmel.itdmtrct.containers.TesseractContainer;
 import ftm._0xfmel.itdmtrct.tile.InterdimensionalTesseractTile;
 import ftm._0xfmel.itdmtrct.utils.Logging;
+import ftm._0xfmel.itdmtrct.utils.exception.ValidationException;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
